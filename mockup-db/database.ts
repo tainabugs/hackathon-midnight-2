@@ -8,13 +8,13 @@ type UserBoardType = {
   export const userData: UserBoardType[] = [
     {
       user: "Erick",
-      title: "Quem é voce",
+      title: "Quem é voce?",
       message: "Erick",
       isFilled: true,
     },
     {
       user: "Taina",
-      title: "Quem é voce",
+      title: "Quem é voce?",
       message: "",
       isFilled: false,
     },
@@ -32,13 +32,13 @@ type UserBoardType = {
     },
     {
       user: "Taina",
-      title: "Quem é voce",
+      title: "Quem é voce?",
       message: "",
       isFilled: false,
     },
     {
       user: "Taina",
-      title: "Quem é voce",
+      title: "What would you like to accomplish today and?",
       message: "",
       isFilled: false,
     },
