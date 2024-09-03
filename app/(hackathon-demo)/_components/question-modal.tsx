@@ -4,47 +4,36 @@ import { motion } from "framer-motion";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+export interface QuestionModalProps {
+  onCreateBoardCallback: (title: string) => void;
+}
+
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-export const QuestionModal = () => {
+export const QuestionModal = ({ onCreateBoardCallback }: QuestionModalProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const formSchema = z.object({
-    message: z
-      .string()
-      .min(4, { message: "Must be 4 or more characters long" })
-      .max(500, { message: "Must be 200 characters or fewer" }),
+    question: z.string().min(4, { message: "Must be 4 or more characters long" }).max(500, { message: "Must be 200 characters or fewer" }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      message: "",
+      question: "",
     },
   });
 
-  // const onSubmit = async (values: z.infer<typeof formSchema>) => {
-  //   try {
-  //     await sendEmail(
-  //       values.name,
-  //       values.email,
-  //       values.subject,
-  //       values.message,
-  //       values.organization
-  //     );
-  //     setShowMessage(true);
-  //     form.reset();
-  //   } catch {
-  //     setShowError(true);
-  //   }
-  // };
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      onCreateBoardCallback(values.question);
+      // setShowMessage(true);
+      form.reset();
+    } catch {
+      // setShowError(true);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-y-8">
@@ -56,18 +45,12 @@ export const QuestionModal = () => {
       >
         Create a new question
       </motion.p>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 1.5 }}
-      >
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 1.5 }}>
         <Form {...form}>
-          <form 
-          // onSubmit={form.handleSubmit(onSubmit)}
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
-              name="message"
+              name="question"
               render={({ field }) => (
                 <FormItem className="">
                   <FormControl>
@@ -86,6 +69,7 @@ export const QuestionModal = () => {
       </motion.div>
       <div className="flex justify-end">
         <motion.button
+          onClick={form.handleSubmit(onSubmit)}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           initial={{ opacity: 0, scale: 1 }}

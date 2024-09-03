@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
 import "./globals.css";
+import { MidnightWrapper } from "@/providers/midnight-wrapper";
+import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
 
 const raleway = Raleway({
   subsets: ["latin"],
@@ -20,9 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-      <link rel="icon" href="/favicon-rounded.png" />
+        <link rel="icon" href="/favicon-rounded.png" />
       </head>
-      <body className={`${raleway.className} font-medium text-[#383838] antialiased`}>{children}</body>
+      <body className={`${raleway.className} font-medium text-[#383838] antialiased`}>
+        <ConvexClientProvider>
+          <MidnightWrapper>{children}</MidnightWrapper>
+        </ConvexClientProvider>
+      </body>
     </html>
   );
 }

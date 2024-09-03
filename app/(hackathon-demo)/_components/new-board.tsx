@@ -2,17 +2,10 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { userData } from "@/mockup-db/database";
-
 
 export const NewBoard = () => {
-  const testando = () => {   
-
-    console.log(userData); // You can see the updated data here
-  };
   return (
-    <motion.div
-      onClick={testando}
+    <motion.div      
       initial={{ scale: 1, backgroundColor: "rgba(255, 254, 248, 0.25)" }}
       whileHover={{
         scale: 1.1,
