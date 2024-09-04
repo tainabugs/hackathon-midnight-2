@@ -8,9 +8,17 @@ interface PageLayoutProps {
 const PageLayout = ({ children }: PageLayoutProps) => {
   return (
     <div className="min-h-screen h-screen ">
-      <div className="absolute flex items-center justify-between h-24 w-full px-10 text-[22px]">
+      <div className="absolute flex items-center justify-between h-24 w-full px-10 text-[20px]">
          <h1>Hackathon demo - Next.js 14</h1>
-         <div>Features</div>
+         <div className="flex items-center gap-x-2 text-[18px]">
+          <p>Features</p>
+          <Image 
+          src="/info.svg"
+          alt="info"
+          width={15}
+          height={15}
+          />
+        </div>
       </div>
       <Image
         src="/gradient-bg.png"
