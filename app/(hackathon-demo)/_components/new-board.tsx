@@ -3,9 +3,14 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export const NewBoard = () => {
+interface NewBoardProps {
+  onClick: (state: boolean) => void;
+}
+
+export const NewBoard = ({ onClick }: NewBoardProps) => {
   return (
-    <motion.div      
+    <motion.div
+      onClick={() => onClick(true)}
       initial={{ scale: 1, backgroundColor: "rgba(255, 254, 248, 0.25)" }}
       whileHover={{
         scale: 1.1,
@@ -13,10 +18,10 @@ export const NewBoard = () => {
         backgroundColor: "rgba(255, 254, 248, 0.35)",
       }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="relative flex flex-col items-center gap-y-12 h-80 w-80 pt-16 px-6 rounded-[4px] backdrop-blur-xl  cursor-pointer"
+      className="relative flex flex-col items-center gap-y-12 h-64 w-64 pt-12 px-6 rounded-[4px] backdrop-blur-xl  cursor-pointer"
     >
-      <p className="text-[20px]">Create new question</p>
-      <Image src="/new.svg" alt="Background" width={40} height={40} />
+      <p className="text-[18px]">Create new question</p>
+      <Image src="/new.svg" alt="Background" width={35} height={35} />
     </motion.div>
   );
 };

@@ -2,21 +2,28 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Patrick_Hand } from "next/font/google";
+import { Patrick_Hand, Raleway } from "next/font/google";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useCallback, useEffect, useState } from "react";
+import { ContractAddress } from "@midnight-ntwrk/compact-runtime";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { BoardDeployment, BrowserDeployedQuetionsManager, logger } from "@/lib/question-contract";
-import { useCallback, useEffect, useState } from "react";
 import { BBoardDerivedState, DeployedBBoardAPI } from "@/lib/question-contract/api";
-import { ContractAddress } from "@midnight-ntwrk/compact-runtime";
 import { STATE } from "@/lib/question-contract/contract";
+import { useShowToast } from "@/hooks/use-show-toast";
 
 const patrick_hand = Patrick_Hand({
   subsets: ["latin"],
   weight: ["400"],
+});
+
+const raleway = Raleway({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 interface BoardProps {
@@ -24,6 +31,7 @@ interface BoardProps {
 }
 
 export const Board = ({ address }: BoardProps) => {
+  const {isDisabled, setIsDisabled, setNotDisabled} = useShowToast();
   const quetionsApiProvider = new BrowserDeployedQuetionsManager(logger);
   const [boardDeployment, setBoardDeployment] = useState<BoardDeployment>();
   const [deployedBoardAPI, setDeployedBoardAPI] = useState<DeployedBBoardAPI>();
@@ -63,20 +71,20 @@ export const Board = ({ address }: BoardProps) => {
   }, [boardDeployment, setIsWorking, setErrorMessage, setDeployedBoardAPI]);
 
   const formSchema = z.object({
-    answer: z.string().min(4, { message: "Must be 4 or more characters long" }).max(200, { message: "Must be 200 characters or fewer" }),
+    message: z.string().min(4, { message: "Must be 4 or more characters long" }).max(200, { message: "Must be 200 characters or fewer" }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      answer: "",
+      message: "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      onPostMessage(values.answer);
-      // setShowMessage(true);
+      onPostMessage(values.message);
+
     } catch {
       // setShowError(true);
     }
@@ -88,11 +96,15 @@ export const Board = ({ address }: BoardProps) => {
     async (message: string) => {
       try {
         if (deployedBoardAPI) {
+          setIsDisabled()
           setIsWorking(true);
           await deployedBoardAPI.post(message);
+          setNotDisabled();
+          form.reset()
         }
       } catch (error: unknown) {
         setErrorMessage(error instanceof Error ? error.message : String(error));
+        setNotDisabled();
       } finally {
         setIsWorking(false);
       }
@@ -128,11 +140,11 @@ export const Board = ({ address }: BoardProps) => {
         backgroundColor: "rgba(255, 254, 248, 0.35)",
       }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="relative flex flex-col items-center justify-between h-80 w-80 pt-10 px-6  pb-20 rounded-[4px] backdrop-blur-xl  cursor-pointer"
+      className="relative flex flex-col items-center justify-between h-64 w-64 pt-6 px-6  pb-16 rounded-[4px] backdrop-blur-xl  cursor-pointer"
     >
-      <p className="w-full pl-4 text-[20px]">{boardState?.title}</p>
+      <p className="w-full pl-2 text-[16px] leading-tight">{boardState?.title}</p>
       {boardState?.state === STATE.occupied ? (
-        <div className={`${patrick_hand.className} cursor-not-allowed bg-[#FFFEF8]/60 w-full h-28 rounded-[3px] shadow-sm p-4 text-[20px]`}>
+        <div className={`${patrick_hand.className} cursor-not-allowed bg-[#FFFEF8]/30 w-full h-28 rounded-[3px] shadow-sm p-4 text-[18px]`}>
           {boardState.message}
         </div>
       ) : (
@@ -141,15 +153,16 @@ export const Board = ({ address }: BoardProps) => {
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <FormField
                 control={form.control}
-                name="answer"
+                name="message"
                 render={({ field }) => (
                   <FormItem className="">
                     <FormControl>
                       <Textarea
-                        className={`${patrick_hand.className} bg-[#FFFEF8]/60 w-full h-28 shadow-sm p-4 text-[20px] resize-none 
-                      focus-visible:ring-0 focus-visible:ring-offset-0 border-none rounded-[3px] 
-                     placeholder:text-[#9e9e9e] placeholder:font-['Raleway'] placeholder:text-[18px]`}
+                        className={`${patrick_hand.className} bg-[#FFFEF8]/30 w-full h-28 shadow-sm p-4 text-[18px] resize-none 
+                      focus-visible:ring-0 focus-visible:ring-offset-0 border-none rounded-[3px] focus:bg-[#FFFEF8]/70
+                     placeholder:text-[#9e9e9e] placeholder:font-raleway placeholder:text-[16px]`}
                         placeholder="Share your thoughts"
+                        style={{}}
                         {...field}
                       />
                     </FormControl>
@@ -162,15 +175,15 @@ export const Board = ({ address }: BoardProps) => {
         </div>
       )}
 
-      <div className="absolute flex items-end bottom-5 right-6 gap-x-2">
+      <div className="absolute flex items-end bottom-4 right-5 gap-x-2">
         {boardState?.state === STATE.occupied && boardState.isOwner && (
           <div className="p-2 rounded-[8px] hover:bg-[#fafafa]/35 transition-all" onClick={onDeleteMessage}>
-            <Image src="/trash-bin.svg" alt="Background" width={20} height={20} />
+            <Image src="/trash-bin.svg" alt="Background" width={18} height={18} />
           </div>
         )}
         {!(boardState?.state === STATE.occupied) && (
           <div className="p-2 rounded-[8px] hover:bg-[#fafafa]/25 transition-all" onClick={form.handleSubmit(onSubmit)}>
-            <Image src="/send.svg" alt="Background" width={20} height={20} />
+            <Image src="/send.svg" alt="Background" width={18} height={18} />
           </div>
         )}
       </div>
