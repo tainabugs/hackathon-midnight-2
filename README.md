@@ -36,12 +36,12 @@ yarn dev
 
 ## Key features
 
-- User-Friendly Interface: Animations, clean UI and intuitive UX
+- Nextjs and App Router: The implementation was carried out using the latest version of Next.js and the app router to showcase the compatibility of Midnight libraries with a framework utilized by millions of developers.
+- Sleek Interface: Featuring smooth animations with Framer Motion, a clean design powered by Tailwind CSS, and intuitive interactions built with React for an engaging, responsive user experience.
 - Reactive Database integration: Enables seamless connection to a reactive database, ensuring multiple users receive real-time updates without requiring a page refresh.
 - RxJs library and reactive indexing: The Midnight indexer provides reactive updates, so RxJs was utilized to maintain the application's reactivity by working with observables and subscriptions.
 - Transaction Management: Allows users to create, sign, proof and submit transactions directly from the frontend.
 - Compact smart contracts and ZK circuits: Code developed on Compact language was compiled to create a TypeScript-based API, abstracting the logic for users to submit questions anonymously, while allowing others to respond anonymously as well
 - Proof server integration & Dapp connector: The Midnight wallet dApp connector seamlessly communicates with the application UI, as well as the indexer, node, and proof server.
-- Nextjs and App Router: The implementation was carried out using the latest version of Next.js and the app router to showcase the compatibility of Midnight libraries with a framework utilized by millions of developers.
 - The code will be fully open-source, fostering collaboration with the community.
   
