@@ -22,7 +22,7 @@ const Page = () => {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { isDisabled } = useShowToast();
-  const { isLoading, indexLoading } = useMessageLoading();
+  const { isLoading } = useMessageLoading();
   const data = useQuery(api.quetionsFunction.getTaskList, {});
   const mutateSomething = useMutation(api.quetionsFunction.createTask);
   const onCreateBoard = async (title: string) => {
