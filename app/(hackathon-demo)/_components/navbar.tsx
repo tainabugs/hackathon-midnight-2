@@ -58,9 +58,9 @@ export const Navbar = () => {
             <div className=" h-60 flex gap-x-4 w-60  ">
               <div className="flex flex-col justify-between ">
                 {icons.map((item, index) => (
-                  <div className="py-1">
+                  <div  key={index} className="py-1">
                     <Image
-                      key={index}
+                     
                       src={item.src}
                       alt={item.alt}
                       height={13}
