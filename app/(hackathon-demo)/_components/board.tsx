@@ -10,11 +10,27 @@ import { useCallback, useEffect, useState } from "react";
 import { ContractAddress } from "@midnight-ntwrk/compact-runtime";
 
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { BoardDeployment, BrowserDeployedQuetionsManager, logger } from "@/lib/question-contract";
-import { BBoardDerivedState, DeployedBBoardAPI } from "@/lib/question-contract/api";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  BoardDeployment,
+  BrowserDeployedQuetionsManager,
+  logger,
+} from "@/lib/question-contract";
+import {
+  BBoardDerivedState,
+  DeployedBBoardAPI,
+} from "@/lib/question-contract/api";
 import { STATE } from "@/lib/question-contract/contract";
 import { useShowToast } from "@/hooks/use-show-toast";
+import { useMessageLoading } from "@/hooks/use-message-loading-map";
+import { useToast } from "@/hooks/use-toast";
+import { loadBindings } from "next/dist/build/swc";
 
 const patrick_hand = Patrick_Hand({
   subsets: ["latin"],
@@ -28,10 +44,13 @@ const raleway = Raleway({
 
 interface BoardProps {
   address: string;
+  index: number;
 }
 
-export const Board = ({ address }: BoardProps) => {
-  const {isDisabled, setIsDisabled, setNotDisabled} = useShowToast();
+export const Board = ({ address, index }: BoardProps) => {
+  const { toast } = useToast();
+  const { isLoading, setIsLoading, setNotLoading, indexLoading } =
+    useMessageLoading();
   const quetionsApiProvider = new BrowserDeployedQuetionsManager(logger);
   const [boardDeployment, setBoardDeployment] = useState<BoardDeployment>();
   const [deployedBoardAPI, setDeployedBoardAPI] = useState<DeployedBBoardAPI>();
@@ -40,7 +59,9 @@ export const Board = ({ address }: BoardProps) => {
   const [isWorking, setIsWorking] = useState(false);
 
   useEffect(() => {
-    const subscription = quetionsApiProvider.boardDeployment$.subscribe(setBoardDeployment);
+    setIsWorking(true);
+    const subscription =
+      quetionsApiProvider.boardDeployment$.subscribe(setBoardDeployment);
     onJoinBoard(address);
 
     return () => {
@@ -54,24 +75,30 @@ export const Board = ({ address }: BoardProps) => {
     }
     if (boardDeployment.status === "in-progress") {
       return;
-    }
-
-    setIsWorking(false);
+    }    
 
     if (boardDeployment.status === "failed") {
-      setErrorMessage(boardDeployment.error.message.length ? boardDeployment.error.message : "Encountered an unexpected error.");
+      setErrorMessage(
+        boardDeployment.error.message.length
+          ? boardDeployment.error.message
+          : "Encountered an unexpected error."
+      );
       return;
     }
 
     setDeployedBoardAPI(boardDeployment.api);
     const subscription = boardDeployment.api.state$.subscribe(setBoardState);
+    setIsWorking(false);
     return () => {
       subscription.unsubscribe();
     };
   }, [boardDeployment, setIsWorking, setErrorMessage, setDeployedBoardAPI]);
 
   const formSchema = z.object({
-    message: z.string().min(4, { message: "Must be 4 or more characters long" }).max(200, { message: "Must be 200 characters or fewer" }),
+    message: z
+      .string()
+      .min(4, { message: "Must be 4 or more characters long" })
+      .max(200, { message: "Must be 200 characters or fewer" }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -81,55 +108,55 @@ export const Board = ({ address }: BoardProps) => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (
+    values: z.infer<typeof formSchema>,
+    index: number
+  ) => {
     try {
-      onPostMessage(values.message);
-
+      onPostMessage(values.message, index);
     } catch {
       // setShowError(true);
     }
   };
 
-  const onJoinBoard = (contractAddress: ContractAddress) => quetionsApiProvider.resolveAddress(contractAddress);
+  const onJoinBoard = (contractAddress: ContractAddress) =>
+    quetionsApiProvider.resolveAddress(contractAddress);
 
   const onPostMessage = useCallback(
-    async (message: string) => {
+    async (message: string, index: number) => {
       try {
         if (deployedBoardAPI) {
-          setIsDisabled()
-          setIsWorking(true);
+          setIsLoading(index);
           await deployedBoardAPI.post(message);
-          setNotDisabled();
-          form.reset()
+          toast({
+            title: "Message sent!",
+          });
+          setNotLoading();
+          form.reset();
         }
       } catch (error: unknown) {
         setErrorMessage(error instanceof Error ? error.message : String(error));
-        setNotDisabled();
-      } finally {
-        setIsWorking(false);
+        setNotLoading();
       }
     },
-    [deployedBoardAPI, setErrorMessage, setIsWorking]
+    [deployedBoardAPI, setErrorMessage]
   );
 
   const onDeleteMessage = useCallback(async () => {
     try {
       if (deployedBoardAPI) {
-        setIsWorking(true);
+        setIsLoading(index);
         await deployedBoardAPI.takeDown();
+        toast({
+          title: "Your message was successfully deleted.",
+        });
+        setNotLoading();
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsWorking(false);
+      setNotLoading();
     }
-  }, [deployedBoardAPI, setErrorMessage, setIsWorking]);
-
-  const onCopyContractAddress = useCallback(async () => {
-    if (deployedBoardAPI) {
-      await navigator.clipboard.writeText(deployedBoardAPI.deployedContractAddress);
-    }
-  }, [deployedBoardAPI]);
+  }, [deployedBoardAPI, setErrorMessage]);
 
   return (
     <motion.div
@@ -142,15 +169,46 @@ export const Board = ({ address }: BoardProps) => {
       transition={{ duration: 0.2, ease: "easeInOut" }}
       className="relative flex flex-col items-center justify-between h-64 w-64 pt-6 px-6  pb-16 rounded-[4px] backdrop-blur-xl  cursor-pointer"
     >
-      <p className="w-full pl-2 text-[16px] leading-tight">{boardState?.title}</p>
+      <p className="w-full pl-2 text-[17px] leading-tight">
+        {boardState ? boardState.title : <TitleSkeleton/>}
+      </p>
       {boardState?.state === STATE.occupied ? (
-        <div className={`${patrick_hand.className} cursor-not-allowed bg-[#FFFEF8]/30 w-full h-28 rounded-[3px] shadow-sm p-4 text-[18px]`}>
-          {boardState.message}
-        </div>
+        <button
+          disabled={isLoading && indexLoading === index}
+          className={`${patrick_hand.className} relative flex items-start cursor-not-allowed bg-[#FFFEF8]/30 w-full h-28 rounded-[3px] shadow-sm p-4 text-[18px]
+          disabled:text-[#383838]/30 disabled:bg-[#FFFEF8]/15`}
+        >
+          <p>{boardState.message}</p>
+          {isLoading && indexLoading === index && (
+            <div className="absolute bottom-3 right-3">
+              <Image
+                className="animate-spin"
+                src="/loading.svg"
+                alt="loading"
+                width={18}
+                height={18}
+              />
+            </div>
+          )}
+        </button>
       ) : (
-        <div className="w-full">
+        <div className="relative w-full">
+          {isLoading && indexLoading === index && (
+            <div className="absolute bottom-3 right-3">
+              <Image
+                className="animate-spin"
+                src="/loading.svg"
+                alt="loading"
+                width={18}
+                height={18}
+              />
+            </div>
+          )}
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              onSubmit={form.handleSubmit((values) => onSubmit(values, index))}
+            >
               <FormField
                 control={form.control}
                 name="message"
@@ -160,9 +218,9 @@ export const Board = ({ address }: BoardProps) => {
                       <Textarea
                         className={`${patrick_hand.className} bg-[#FFFEF8]/30 w-full h-28 shadow-sm p-4 text-[18px] resize-none 
                       focus-visible:ring-0 focus-visible:ring-offset-0 border-none rounded-[3px] focus:bg-[#FFFEF8]/70
-                     placeholder:text-[#9e9e9e] placeholder:font-raleway placeholder:text-[16px]`}
+                     placeholder:text-[#9e9e9e] placeholder:font-raleway placeholder:text-[15px]`}
                         placeholder="Share your thoughts"
-                        style={{}}
+                        disabled={isLoading && indexLoading === index}
                         {...field}
                       />
                     </FormControl>
@@ -174,19 +232,66 @@ export const Board = ({ address }: BoardProps) => {
           </Form>
         </div>
       )}
+      {/* {isWorking && <div >loading board</div>} */}
 
       <div className="absolute flex items-end bottom-4 right-5 gap-x-2">
-        {boardState?.state === STATE.occupied && boardState.isOwner && (
-          <div className="p-2 rounded-[8px] hover:bg-[#fafafa]/35 transition-all" onClick={onDeleteMessage}>
-            <Image src="/trash-bin.svg" alt="Background" width={18} height={18} />
-          </div>
-        )}
-        {!(boardState?.state === STATE.occupied) && (
-          <div className="p-2 rounded-[8px] hover:bg-[#fafafa]/25 transition-all" onClick={form.handleSubmit(onSubmit)}>
-            <Image src="/send.svg" alt="Background" width={18} height={18} />
-          </div>
-        )}
+        {boardState?.state === STATE.occupied &&
+          boardState.isOwner &&
+          (isLoading && indexLoading === index ? (
+            <div
+              className="p-2 rounded-[8px] cursor-not-allowed"
+              onClick={onDeleteMessage}
+            >
+              <Image
+                src="/trash-bin-disabled.svg"
+                alt="Background"
+                width={18}
+                height={18}
+              />
+            </div>
+          ) : (
+            <div
+              className="p-2 rounded-[8px] hover:bg-[#fafafa]/35 transition-all"
+              onClick={onDeleteMessage}
+            >
+              <Image
+                src="/trash-bin.svg"
+                alt="Background"
+                width={18}
+                height={18}
+              />
+            </div>
+          ))}
+        {!(boardState?.state === STATE.occupied) &&
+          (isLoading && indexLoading === index ? (
+            <div
+              className="p-2 rounded-[8px] cursor-not-allowed"
+              onClick={form.handleSubmit((values) => onSubmit(values, index))}
+            >
+              <Image
+                src="/send-disabled.svg"
+                alt="Background"
+                width={18}
+                height={18}
+              />
+            </div>
+          ) : (
+            <div
+              className="p-2 rounded-[8px] hover:bg-[#fafafa]/25 transition-all"
+              onClick={form.handleSubmit((values) => onSubmit(values, index))}
+            >
+              <Image src="/send.svg" alt="Background" width={18} height={18} />
+            </div>
+          ))}
       </div>
     </motion.div>
+  );
+};
+
+const TitleSkeleton = () => {
+  return (
+    <div className="animate-pulse">
+      <div className="h-6 w-full rounded-[4px] bg-[#FFFEF8]/30 backdrop-blur-xl" />
+    </div>
   );
 };

@@ -3,10 +3,11 @@ import { Raleway } from "next/font/google";
 import "./globals.css";
 import { MidnightWrapper } from "@/providers/midnight-wrapper";
 import { ConvexClientProvider } from "@/providers/ConvexClientProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 const raleway = Raleway({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600" ,"700"],
 });
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className={`${raleway.className} font-medium text-[#383838] antialiased`}>
         <ConvexClientProvider>
           <MidnightWrapper>{children}</MidnightWrapper>
+          <Toaster />
         </ConvexClientProvider>
       </body>
     </html>
