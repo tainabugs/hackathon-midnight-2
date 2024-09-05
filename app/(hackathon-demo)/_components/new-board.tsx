@@ -20,8 +20,8 @@ export const NewBoard = ({ onClick }: NewBoardProps) => {
       transition={{ duration: 0.2, ease: "easeInOut" }}
       className="relative flex flex-col items-center gap-y-12 h-64 w-64 pt-12 px-6 rounded-[4px] backdrop-blur-xl  cursor-pointer"
     >
-      <p className="text-[18px]">Create new question</p>
-      <Image src="/new.svg" alt="Background" width={35} height={35} />
+      <p className="text-[17px]">Create new question</p>
+      <Image src="/plus.svg" alt="new question" width={35} height={35} />
     </motion.div>
   );
 };
